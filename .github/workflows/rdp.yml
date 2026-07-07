@@ -4,37 +4,137 @@
 # Uso: Ejecutar manualmente desde la pestaña "Actions" del repo.
 # La VM Windows estará activa hasta 6 horas.
 # No requiere tarjeta de crédito y es completamente gratuito.
-#
-# IMPORTANTE: Esta VM es pública. Úsala solo para pruebas rápidas.
-# No almacenes datos sensibles ni credenciales reales.
 # ============================================================
 
 name: Windows RDP (LBAMonitor Test)
 
 on:
-  workflow_dispatch:  # Solo se ejecuta manualmente
+  workflow_dispatch:
 
-# Variables de entorno para forzar Node.js 24 (elimina advertencias)
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  # Forzar codificación UTF-8 para evitar errores de Unicode
+  PYTHONIOENCODING: utf-8
+  PYTHONUTF8: 1
 
 jobs:
   rdp:
     runs-on: windows-latest
-    timeout-minutes: 360  # 6 horas máximo
+    timeout-minutes: 360
 
     steps:
       # ============================================================
       # 1. Clonar el repositorio
       # ============================================================
       - name: Checkout código
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Trae todo el historial (por si necesitas tags)
+        uses: actions/checkout@v5
 
       # ============================================================
       # 2. Instalar Python 3.11
       # ============================================================
+      - name: Instalar Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      # ============================================================
+      # 3. Instalar dependencias del backend
+      # ============================================================
+      - name: Instalar dependencias del backend
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          python -c "import lbamonitor; print('Backend OK')"
+        shell: pwsh
+
+      # ============================================================
+      # 4. Instalar dependencias del desktop (PySide6)
+      # ============================================================
+      - name: Instalar dependencias del desktop
+        run: |
+          cd desktop_qt
+          pip install -r requirements.txt
+          python -c "import PySide6; print('PySide6 OK')"
+        shell: pwsh
+
+      # ============================================================
+      # 5. Inicializar base de datos y crear usuario admin
+      # ============================================================
+      - name: Inicializar base de datos
+        run: |
+          cd backend
+          $env:LBAMONITOR_ENV = "development"
+          # Forzar codificación UTF-8 en la consola
+          chcp 65001 > $null
+          # Ejecutar init-db con las variables de entorno correctas
+          lbamonitor-cli init-db --reset --with-admin
+          # Verificar que la BD se creó correctamente (versión simplificada)
+          python -c "from lbamonitor.core.db import init_engine, get_session_factory, dispose_engine; from lbamonitor.core.models import User; import asyncio; async def check(): await init_engine(); async with get_session_factory()() as s: user = await s.get(User, 1); print('Admin user exists:', user is not None); await dispose_engine(); asyncio.run(check())"
+        shell: pwsh
+
+      # ============================================================
+      # 6. Habilitar Escritorio Remoto (RDP) y abrir firewall
+      # ============================================================
+      - name: Habilitar RDP y crear usuario
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name 'fDenyTSConnections' -Value 0
+          netsh advfirewall firewall set rule group="remote desktop" new enable=Yes
+          net user lbatest Password123! /add
+          net localgroup Administrators lbatest /add
+          net localgroup "Remote Desktop Users" lbatest /add
+          Start-Service TermService -ErrorAction SilentlyContinue
+        shell: pwsh
+
+      # ============================================================
+      # 7. Obtener IP pública de la VM
+      # ============================================================
+      - name: Obtener IP pública
+        id: ip
+        run: |
+          $ip = (Invoke-RestMethod -Uri "https://api.ipify.org").Trim()
+          echo "ip=$ip" >> $env:GITHUB_OUTPUT
+          echo "url=rdp://$ip:3389" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
+      # ============================================================
+      # 8. Mostrar credenciales y conexión
+      # ============================================================
+      - name: Mostrar credenciales
+        run: |
+          Write-Host "==================================================" -ForegroundColor Green
+          Write-Host "  CONEXIÓN RDP HABILITADA" -ForegroundColor Green
+          Write-Host "==================================================" -ForegroundColor Green
+          Write-Host ""
+          Write-Host "Dirección IP: ${{ steps.ip.outputs.ip }}"
+          Write-Host "Puerto: 3389"
+          Write-Host "Usuario: lbatest"
+          Write-Host "Contraseña: Password123!"
+          Write-Host ""
+          Write-Host "IMPORTANTE: La VM se destruirá cuando este workflow termine."
+          Write-Host "Usa el Cliente de Escritorio Remoto (mstsc.exe) para conectarte."
+          Write-Host "En móvil: Microsoft Remote Desktop (Android/iOS)."
+          Write-Host ""
+          Write-Host "COMANDOS RÁPIDOS DENTRO DE LA VM:" -ForegroundColor Yellow
+          Write-Host "  cd C:\Users\runneradmin\work\*" -ForegroundColor White
+          Write-Host "  cd backend"
+          Write-Host "  lbamonitor-api            # Arrancar backend"
+          Write-Host "  cd ..\desktop_qt"
+          Write-Host "  python main.py            # Arrancar app PySide6"
+          Write-Host "==================================================" -ForegroundColor Yellow
+        shell: pwsh
+
+      # ============================================================
+      # 9. Mantener la VM activa (hasta 6 horas)
+      # ============================================================
+      - name: Mantener VM activa
+        run: |
+          Write-Host "La VM estará activa por 6 horas. Presiona Ctrl+C para detenerla."
+          while ($true) {
+            $now = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+            Write-Host "[$now] VM activa. IP: ${{ steps.ip.outputs.ip }} | Usuario: lbatest | Pass: Password123!" -ForegroundColor Cyan
+            Start-Sleep -Seconds 600
+          }
+        shell: pwsh      # ============================================================
       - name: Instalar Python 3.11
         uses: actions/setup-python@v5
         with:
