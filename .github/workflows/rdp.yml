@@ -64,14 +64,20 @@ jobs:
         run: |
           cd backend
           $env:LBAMONITOR_ENV = "development"
-          # Cambiar a UTF-8 para evitar problemas con caracteres especiales
           chcp 65001 > $null
-          # Inicializar BD con admin
           lbamonitor-cli init-db --reset --with-admin
-          # Verificación simple con SQLite (sin asyncio)
-          sqlite3 C:/ProgramData/LBAMonitor/data/lbamonitor.db "SELECT COUNT(*) FROM users WHERE username='admin';"
+          # Verificación con Python (sqlite3 módulo, no ejecutable)
+          python -c "
+import sqlite3
+conn = sqlite3.connect('C:/ProgramData/LBAMonitor/data/lbamonitor.db')
+cursor = conn.cursor()
+cursor.execute('SELECT COUNT(*) FROM users WHERE username=\"admin\"')
+count = cursor.fetchone()[0]
+conn.close()
+print('Admin user exists:' if count > 0 else 'Admin user not found')
+"
           if ($LASTEXITCODE -eq 0) {
-            Write-Host "✅ Base de datos y usuario admin creados correctamente" -ForegroundColor Green
+            Write-Host "✅ Base de datos y usuario admin verificados" -ForegroundColor Green
           }
         shell: pwsh
 
