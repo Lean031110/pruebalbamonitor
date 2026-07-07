@@ -1,0 +1,163 @@
+# ===========================================================================
+# LBAMonitor — Configuración por defecto
+# Copia este archivo a `config.toml` y ajusta los valores necesarios.
+# Todas las claves pueden sobreescribirse con variables de entorno con prefijo
+# `LBAMONITOR_` (ej: LBAMONITOR_SERVER_PORT=9000).
+# ===========================================================================
+
+[server]
+# Host donde escucha la API. 127.0.0.1 = solo local. 0.0.0.0 = LAN.
+host = "127.0.0.1"
+port = 8123
+# Workers de uvicorn. Para SQLite usar 1; para PostgreSQL multi-puesto usar 2-4.
+workers = 1
+# Orígenes CORS permitidos. "*" = cualquiera (no recomendado en producción).
+cors_origins = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8123"]
+# Activar /docs y /redoc en producción (recomendado: false en kioscos).
+docs_enabled = true
+
+[database]
+# Engine: "sqlite" (standalone, equivalente a Uatcher) o "postgresql" (centralizado).
+engine = "sqlite"
+# SQLite: ruta al archivo. PostgreSQL: nombre de la BD.
+path = "C:/ProgramData/LBAMonitor/data/lbamonitor.db"
+# Solo PostgreSQL:
+# host = "localhost"
+# port = 5432
+# user = "lbamonitor"
+# password = ""
+echo = false  # Log SQL queries (solo desarrollo)
+
+[monitoring]
+# Intervalo de polling para MTP (segundos). MTP no soporta eventos, hay que hacer polling.
+mtp_poll_interval_seconds = 5
+# Tamaño del buffer del FileSystemWatcher (bytes). Mínimo 65536.
+fs_watcher_buffer = 65536
+# Tiempo de debounce para eventos de filesystem (ms).
+fs_debounce_ms = 500
+# Filtros de tipo de archivo a trackear (vacío = todos).
+file_type_filters = []
+# Excluir archivos del sistema.
+exclude_system_files = true
+# Patrones a excluir (glob).
+exclude_patterns = ["Thumbs.db", ".DS_Store", "desktop.ini", "~$*", "*.tmp"]
+
+[backup]
+enabled = true
+# Hora del backup diario (24h). 3 = 03:00.
+hour = 3
+# Días a conservar.
+keep_days = 30
+# Carpeta destino.
+destination = "C:/ProgramData/LBAMonitor/backups"
+# Backup al cerrar el servicio.
+on_exit = false
+
+[logging]
+level = "INFO"  # DEBUG, INFO, WARNING, ERROR
+rotation = "1 day"
+retention = "30 days"
+path = "C:/ProgramData/LBAMonitor/logs"
+# Mostrar logs en consola (además de archivo).
+console = true
+
+[license]
+# Modo: "trial" (sin licencia, modo limitado), "full" (licencia activa).
+mode = "trial"
+# Clave de licencia (HMAC o RSA, según implementación).
+key = ""
+# Tolerancia: cuántos caracteres del HWID pueden cambiar sin invalidar la licencia.
+# 0 = comparación exacta. Recomendado: 0-4 para tolerar cambios menores de hardware.
+hwid_tolerance = 0
+# Secret HMAC para firmar/verificar licencias. OBLIGATORIO en producción.
+# Generar con: python -c "import secrets; print(secrets.token_hex(32))"
+# Debe ser el MISMO que usa tools/license_generator.
+# Mejor opción: usar RSA (ver public_key_pem / private_key_pem abajo).
+signing_secret = ""
+# Par de claves RSA-2048 (PEM). Si se provee, se usa RSA en lugar de HMAC.
+# public_key_pem debe estar en el backend; private_key_pem solo en tools/license_generator.
+# Generar con:
+#   openssl genrsa -out private.pem 2048
+#   openssl rsa -in private.pem -pubout -out public.pem
+public_key_pem = ""
+private_key_pem = ""
+
+[security]
+# v4.3: auth OBLIGATORIO por defecto. Para desactivar en tests: LBAMONITOR_SECURITY__REQUIRE_AUTH=false
+require_auth = true
+# JWT secret. OBLIGATORIO en producción.
+# Generar con: python -c "import secrets; print(secrets.token_hex(32))"
+jwt_secret = ""
+jwt_algorithm = "HS256"
+# Tiempo de expiración del access token (minutos).
+jwt_expiration_minutes = 60
+# Tiempo de expiración del refresh token (días).
+refresh_expiration_days = 7
+# Algoritmo de hashing de passwords: "bcrypt" (recomendado) o "pbkdf2".
+password_hash_algo = "bcrypt"
+
+[rate_limit]
+enabled = true
+# Requests por minuto por IP (default).
+default_per_minute = 60
+# Login: 5 intentos por minuto por IP (anti brute-force).
+login_per_minute = 5
+# Bloqueo temporal tras exceder (segundos).
+block_seconds = 60
+
+[cache]
+enabled = true
+# Máximo número de entradas en caché LRU.
+max_entries = 1000
+# TTL por defecto (segundos).
+default_ttl = 60
+# Limpiar entradas expiradas cada N segundos.
+cleanup_interval = 300
+
+[appearance]
+# Idioma por defecto: es, en.
+language = "es"
+# Modo: dark, light.
+theme = "dark"
+
+[business]
+name = "Mi Copistería"
+address = ""
+phone = ""
+email = ""
+# Código de moneda ISO 4217.
+currency_code = "CUP"
+# Símbolo de moneda.
+currency_symbol = "₱"
+# Decimales a mostrar.
+currency_decimals = 2
+# Impuesto (%) aplicado al cobro.
+tax_percent = 0.0
+
+[pricing]
+# Modo: per_gb, per_mb, per_file, fixed, custom.
+mode = "per_gb"
+# Precios por unidad.
+price_per_gb = 25.0
+price_per_mb = 0.05
+price_per_file = 1.0
+fixed_price = 50.0
+# Límites.
+min_price = 5.0
+max_price = 5000.0
+# Descuentos.
+vip_discount_percent = 10.0
+employee_discount_percent = 50.0
+# Promoción global activa.
+promotion_enabled = false
+promotion_description = ""
+promotion_discount_percent = 0.0
+
+[paths]
+# Carpeta con archivos de publicidad que se auto-copian al insertar una memoria.
+publicity_folder = ""
+publicity_automatic = false
+# Carpetas de video (accesos rápidos en la UI).
+video_folders = []
+# Carpeta de exports (facturas, recibos, reportes).
+exports = "C:/ProgramData/LBAMonitor/exports"

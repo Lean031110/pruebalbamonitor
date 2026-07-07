@@ -1,0 +1,110 @@
+# ───────── LBAMonitor .gitignore v4.3 ─────────
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+.eggs/
+build/
+dist/
+develop-eggs/
+downloads/
+parts/
+sdist/
+wheels/
+*.whl
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Tests / coverage
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.htmlcov/
+
+# Virtualenvs
+.venv/
+venv/
+env/
+ENV/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# LBAMonitor specific
+# BD SQLite (jamás commitear)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+# El archivo :memory: era un bug, jamás debe existir
+:memory:
+
+# Config con secrets (ej. config.toml puede tener passwords)
+config.toml
+config.local.toml
+# .env con secrets
+.env
+.env.local
+.env.production
+# Pero SI commitear .env.example y config.toml.example
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Backups
+backups/
+*.bak
+
+# Build artifacts
+backend/lbamonitor.egg-info/
+backend/build/
+frontend/dist/
+frontend/node_modules/
+frontend/.vite/
+
+# PyInstaller
+installer/pyinstaller/build/
+installer/pyinstaller/dist/
+*.spec.bak
+
+# Plugins firmados (los .sig NO se commitean para no filtrar la firma)
+backend/plugins/*.sig
+
+# Licencias (jamás commitear)
+*.lic
+license.txt
+
+# Screenshots temporales
+*.png.bak
+*.tmp
+
+# Assets temporales
+tmp/
+temp/

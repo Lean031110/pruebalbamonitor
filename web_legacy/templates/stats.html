@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% set active = 'stats' %}
+{% set title = 'Estadísticas' %}
+{% block content %}
+<h1 style="font-size: 24px; margin-bottom: 24px;">Estadísticas del Día</h1>
+
+{% if kpis %}
+<div class="kpi-grid">
+    <div class="kpi">
+        <div class="kpi-label">Ingresos</div>
+        <div class="kpi-value" style="color: #22C55E;">{{ '%.2f'|format(kpis.revenue) }} CUP</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Transacciones</div>
+        <div class="kpi-value">{{ kpis.transactions }}</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">USBs Insertadas</div>
+        <div class="kpi-value">{{ kpis.usb_count }}</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">GB Copiados</div>
+        <div class="kpi-value">{{ '%.1f'|format(kpis.gb_copied) }}</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Archivos Copiados</div>
+        <div class="kpi-value">{{ kpis.files_copied }}</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Promedio/Sesión</div>
+        <div class="kpi-value">{{ '%.2f'|format(kpis.avg_per_session) }}</div>
+    </div>
+</div>
+{% else %}
+<div class="card"><p>No hay datos disponibles.</p></div>
+{% endif %}
+
+{% if insights %}
+<h2 style="font-size: 18px; margin: 24px 0 16px;">Insights</h2>
+<div class="card">
+    <p><strong>Día más ocupado:</strong> {{ insights.get('busiest_day_of_week', '—') }}</p>
+    <p><strong>Hora pico:</strong> {{ '%02d:00'|format(insights.get('peak_hour', 0)) if insights.get('peak_hour') is not none else '—' }}</p>
+    <p><strong>Clientes nuevos (30d):</strong> {{ insights.get('new_clients_30d', 0) }}</p>
+    <p><strong>Clientes inactivos (60d):</strong> {{ insights.get('inactive_clients_60d', 0) }}</p>
+</div>
+{% endif %}
+
+<meta http-equiv="refresh" content="30">
+{% endblock %}

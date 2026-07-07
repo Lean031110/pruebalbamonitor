@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% set page_title = 'Dashboard' %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Dashboard · {{ business_name|default('LBAMonitor') }}</h1>
+    <p class="muted">Estadísticas en tiempo real · actualiza automáticamente vía WebSocket (fallback cada 30s)</p>
+</div>
+
+{# KPIs del día — actualizados en tiempo real por dashboard.js #}
+<section class="kpi-grid" id="kpi-grid">
+    <div class="kpi">
+        <div class="kpi-label">Transacciones hoy</div>
+        <div class="kpi-value" id="kpi-transactions">{{ initial_kpis.transactions|default(0) }}</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Ingresos hoy</div>
+        <div class="kpi-value kpi-money" id="kpi-revenue">
+            {{ '%.2f'|format(initial_kpis.revenue|default(0)) }} <span class="currency">{{ currency_symbol|default('₱') }}</span>
+        </div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">USBs insertadas hoy</div>
+        <div class="kpi-value" id="kpi-usb">{{ initial_kpis.usb_count|default(0) }}</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">GB copiados hoy</div>
+        <div class="kpi-value" id="kpi-gb">{{ '%.1f'|format(initial_kpis.gb_copied|default(0)) }}</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Archivos copiados</div>
+        <div class="kpi-value" id="kpi-files">{{ initial_kpis.files_copied|default(0) }}</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Promedio / sesión</div>
+        <div class="kpi-value kpi-money" id="kpi-avg-session">
+            {{ '%.2f'|format(initial_kpis.avg_per_session|default(0)) }} <span class="currency">{{ currency_symbol|default('₱') }}</span>
+        </div>
+    </div>
+</section>
+
+{# Gráfico ingresos últimos 7 días (canvas) #}
+<section class="card">
+    <div class="card-title-row">
+        <h2>Ingresos últimos 7 días</h2>
+        <span class="muted small">Fuente: /api/statistics</span>
+    </div>
+    <canvas id="revenue-chart" width="900" height="260"></canvas>
+</section>
+
+<div class="dashboard-grid">
+    {# USBs activos #}
+    <section class="card">
+        <div class="card-title-row">
+            <h2>USBs activos <span class="count-badge" id="active-count">{{ initial_active_drives|length }}</span></h2>
+            <span class="dot dot-green"></span>
+        </div>
+        <table class="data-table" id="active-drives-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Modelo</th>
+                    <th>Serial</th>
+                    <th>Tamaño</th>
+                    <th>Libre</th>
+                    <th>Pago</th>
+                    <th>Insertado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if initial_active_drives %}
+                {% for d in initial_active_drives %}
+                <tr data-drive-id="{{ d.id }}">
+                    <td>{{ d.id }}</td>
+                    <td>{{ d.name }}</td>
+                    <td>{{ d.model }}</td>
+                    <td class="mono">{{ d.serial }}</td>
+                    <td>{{ d.space_gb }} GB</td>
+                    <td>{{ d.available_gb }} GB</td>
+                    <td class="num">{{ d.payment }}</td>
+                    <td class="muted small">{{ d.inserted_at[:19]|replace('T',' ') if d.inserted_at else '—' }}</td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr><td colspan="8" class="empty-row muted">Sin dispositivos activos</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </section>
+
+    {# Cobros recientes #}
+    <section class="card">
+        <div class="card-title-row">
+            <h2>Cobros recientes</h2>
+            <span class="muted small">Últimos 10</span>
+        </div>
+        <table class="data-table" id="recent-billings-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Sesión</th>
+                    <th>Total</th>
+                    <th>Cobrado</th>
+                    <th>Descuento</th>
+                    <th>Usuario</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if initial_recent_billings %}
+                {% for b in initial_recent_billings %}
+                <tr data-billing-id="{{ b.id }}">
+                    <td>{{ b.id }}</td>
+                    <td>{{ b.session_id }}</td>
+                    <td class="num">{{ '%.2f'|format(b.total) }}</td>
+                    <td class="num {{ 'text-red' if b.not_charged else 'text-green' }}">
+                        {{ '%.2f'|format(b.charged) }}{% if b.not_charged %} ✗{% endif %}
+                    </td>
+                    <td class="num">{{ '%.2f'|format(b.discount_amount) }}</td>
+                    <td>{{ b.created_by }}</td>
+                    <td class="muted small">{{ b.created_at[:19]|replace('T',' ') if b.created_at else '—' }}</td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr><td colspan="7" class="empty-row muted">Sin cobros recientes</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </section>
+</div>
+
+{# Insights #}
+<section class="card">
+    <div class="card-title-row">
+        <h2>Insights del negocio</h2>
+        <span class="muted small">Calculado sobre el histórico</span>
+    </div>
+    <div class="insights-grid">
+        <div class="insight">
+            <div class="insight-label">Día más ocupado</div>
+            <div class="insight-value" id="insight-busiest-day">
+                {{ initial_insights.busiest_day_of_week|default('—') }}
+            </div>
+        </div>
+        <div class="insight">
+            <div class="insight-label">Hora pico</div>
+            <div class="insight-value" id="insight-peak-hour">
+                {% if initial_insights.peak_hour is not none %}
+                {{ '%02d'|format(initial_insights.peak_hour) }}:00
+                {% else %}—{% endif %}
+            </div>
+        </div>
+        <div class="insight">
+            <div class="insight-label">Clientes nuevos (30d)</div>
+            <div class="insight-value" id="insight-new-clients">
+                {{ initial_insights.new_clients_30d|default(0) }}
+            </div>
+        </div>
+        <div class="insight">
+            <div class="insight-label">Clientes inactivos (60d)</div>
+            <div class="insight-value" id="insight-inactive">
+                {{ initial_insights.inactive_clients_60d|default(0) }}
+            </div>
+        </div>
+        <div class="insight">
+            <div class="insight-label">Top USB</div>
+            <div class="insight-value small-text" id="insight-top-usb">
+                {% if initial_insights.top_usb %}
+                {{ initial_insights.top_usb.alias or (initial_insights.top_usb.serial or '—')[:16] }}
+                <span class="muted small">({{ initial_insights.top_usb.visit_count }} visitas)</span>
+                {% else %}—{% endif %}
+            </div>
+        </div>
+        <div class="insight">
+            <div class="insight-label">Top cliente</div>
+            <div class="insight-value small-text" id="insight-top-client">
+                {% if initial_insights.top_client %}
+                {{ initial_insights.top_client.alias or 'Cliente #' ~ initial_insights.top_client.device_id }}
+                <span class="muted small">({{ initial_insights.top_client.visit_count }} visitas)</span>
+                {% else %}—{% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+{# Log de eventos en tiempo real #}
+<section class="card">
+    <div class="card-title-row">
+        <h2>Eventos en tiempo real</h2>
+        <button class="btn btn-secondary btn-sm" onclick="clearEventLog()">Limpiar</button>
+    </div>
+    <div id="event-log" class="event-log"></div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Pasa los datos iniciales al JS (se inicializan antes de cargar dashboard.js)
+window.__LBAMONITOR_INITIAL__ = {
+    kpis: {{ initial_kpis|tojson|safe }},
+    insights: {{ initial_insights|tojson|safe }},
+    active_drives: {{ initial_active_drives|tojson|safe }},
+    recent_billings: {{ initial_recent_billings|tojson|safe }},
+    revenue_by_day: {{ initial_revenue_by_day|tojson|safe }},
+    ws_url: {{ ws_url|tojson|safe }},
+    currency_symbol: {{ currency_symbol|tojson|safe }},
+};
+</script>
+<script src="/web/static/dashboard.js?v=4.3"></script>
+{% endblock %}

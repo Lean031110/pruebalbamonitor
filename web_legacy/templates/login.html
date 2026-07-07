@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% set title = 'Login' %}
+{% block content %}
+<div style="max-width: 400px; margin: 60px auto;">
+    <div class="card" style="padding: 40px;">
+        <h1 style="text-align: center; font-size: 24px; color: #0078D4; margin-bottom: 8px;">LBAMonitor</h1>
+        <p style="text-align: center; color: #A1A1AA; margin-bottom: 24px;">Login de administrador</p>
+
+        {% if error %}
+        <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; padding: 12px; margin-bottom: 16px; color: #EF4444; text-align: center;">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/login">
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 6px; color: #A1A1AA; font-size: 12px; text-transform: uppercase;">Usuario</label>
+                <input type="text" name="username" placeholder="admin" required style="width: 100%;">
+            </div>
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; margin-bottom: 6px; color: #A1A1AA; font-size: 12px; text-transform: uppercase;">Contraseña</label>
+                <input type="password" name="password" placeholder="••••••••" required style="width: 100%;">
+            </div>
+            <button type="submit" style="width: 100%; padding: 12px; font-size: 16px; font-weight: bold;">Entrar</button>
+        </form>
+        <p style="text-align: center; margin-top: 16px; color: #71717A; font-size: 12px;">Credenciales: admin / admin123</p>
+    </div>
+</div>
+{% endblock %}

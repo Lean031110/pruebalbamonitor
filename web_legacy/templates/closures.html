@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% set active = 'closures' %}
+{% set title = 'Cierres de Caja' %}
+{% block content %}
+<h1 style="font-size: 24px; margin-bottom: 24px;">Cierres de Caja</h1>
+
+{% if items %}
+<table>
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Ingresos</th>
+            <th>USBs</th>
+            <th>GB Copiados</th>
+            <th>Descuentos</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in items %}
+        <tr>
+            <td>{{ c.date[:10] if c.date else '—' }}</td>
+            <td style="color: #22C55E; font-weight: bold;">{{ '%.2f'|format(c.revenue) }} CUP</td>
+            <td>{{ c.usb_insertions }}</td>
+            <td>{{ '%.1f'|format(c.gb_copied) }}</td>
+            <td>{{ '%.2f'|format(c.discounts) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="card" style="text-align: center; padding: 40px;">
+    <p style="color: #A1A1AA;">No hay cierres de caja registrados.</p>
+</div>
+{% endif %}
+{% endblock %}

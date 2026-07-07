@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ business_name|default('LBAMonitor') }} — {{ page_title|default('Web') }}</title>
+    <link rel="stylesheet" href="/web/static/style.css?v=4.3">
+</head>
+<body>
+    <nav class="nav">
+        <div class="logo">L</div>
+        <span class="brand">{{ business_name|default('LBAMonitor') }}</span>
+        <a href="/web/" class="{{ 'active' if active_nav == 'catalog' else '' }}">Catálogo</a>
+        {% if username %}
+        <a href="/web/dashboard" class="{{ 'active' if active_nav == 'dashboard' else '' }}">Dashboard</a>
+        {% endif %}
+        <div class="nav-right">
+            {% if username %}
+            <span class="user-badge">👤 {{ username }} <span class="role">{{ role }}</span></span>
+            <a href="/web/logout" class="btn-logout">Salir</a>
+            {% else %}
+            <a href="/web/login" class="btn-login">Login Admin</a>
+            {% endif %}
+        </div>
+    </nav>
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="footer">
+        LBAMonitor v4.3 — Dashboard en tiempo real ·
+        <span id="ws-status" class="ws-status ws-disconnected">WS: desconectado</span>
+    </footer>
+
+    {# JSON inicial para que el JS lo consuma sin fetch extra #}
+    {% block scripts %}{% endblock %}
+</body>
+</html>

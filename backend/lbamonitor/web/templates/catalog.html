@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% set page_title = 'Catálogo' %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Catálogo público</h1>
+    <p class="muted">{{ total }} título{{ 'es' if total != 1 else '' }} disponible{{ 's' if total != 1 else '' }}</p>
+</div>
+
+<div class="search-bar">
+    <input type="text" id="search-input" placeholder="Buscar por título, género, director, artista, tags…"
+           value="{{ q }}" oninput="debounceSearch()">
+    <select id="category-select" onchange="updateSearch()">
+        <option value="">Todas las categorías</option>
+        <option value="movie"  {{ 'selected' if category == 'movie'  }}>Películas</option>
+        <option value="series" {{ 'selected' if category == 'series' }}>Series</option>
+        <option value="music"  {{ 'selected' if category == 'music'  }}>Música</option>
+        <option value="document" {{ 'selected' if category == 'document' }}>Documentos</option>
+        <option value="game"   {{ 'selected' if category == 'game'   }}>Juegos</option>
+        <option value="app"    {{ 'selected' if category == 'app'    }}>Apps</option>
+        <option value="other"  {{ 'selected' if category == 'other'  }}>Otros</option>
+    </select>
+</div>
+
+{% if items %}
+<div class="catalog-grid">
+    {% for item in items %}
+    <div class="catalog-card">
+        <div class="card-header">
+            <span class="badge badge-{{ item.category }}">{{ item.category }}</span>
+            {% if item.rating %}
+            <span class="rating">★ {{ '%.1f'|format(item.rating) }}</span>
+            {% endif %}
+        </div>
+        <h3 class="card-title">{{ item.title }}</h3>
+        <div class="card-meta">
+            {% if item.year %}<span>{{ item.year }}</span>{% endif %}
+            {% if item.genre %}<span>· {{ item.genre }}</span>{% endif %}
+            {% if item.duration_minutes %}<span>· {{ item.duration_minutes }} min</span>{% endif %}
+        </div>
+        {% if item.director or item.artist %}
+        <p class="card-sub">{{ item.director or item.artist }}</p>
+        {% endif %}
+        {% if item.size_gb %}
+        <p class="card-size">{{ '%.1f'|format(item.size_gb) }} GB</p>
+        {% endif %}
+        {% if item.times_copied %}
+        <p class="card-copied">📋 Copiado {{ item.times_copied }} vez{{ 'es' if item.times_copied != 1 else '' }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+{# Paginación simple #}
+{% set total_pages = (total + page_size - 1) // page_size %}
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="/web/?page={{ page - 1 }}{% if category %}&category={{ category }}{% endif %}{% if q %}&q={{ q }}{% endif %}" class="btn btn-secondary">« Anterior</a>
+    {% endif %}
+    <span class="page-info">Página {{ page }} de {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a href="/web/?page={{ page + 1 }}{% if category %}&category={{ category }}{% endif %}{% if q %}&q={{ q }}{% endif %}" class="btn btn-secondary">Siguiente »</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="card empty-state">
+    <p class="muted">No se encontraron resultados.</p>
+</div>
+{% endif %}
+
+<script>
+let searchTimer;
+function debounceSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(updateSearch, 350);
+}
+function updateSearch() {
+    const q = document.getElementById('search-input').value.trim();
+    const cat = document.getElementById('category-select').value;
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (cat) params.set('category', cat);
+    const qs = params.toString();
+    window.location.href = '/web/' + (qs ? '?' + qs : '');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,151 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lbamonitor"
+version = "4.4.0"
+description = "LBAMonitor — Servidor de monitoreo de copias a memorias USB / MTP para Windows"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+authors = [
+    { name = "LBAMonitor Team" }
+]
+keywords = ["usb", "monitor", "mtp", "windows", "fastapi", "copisteria", "cuba"]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: Microsoft :: Windows",
+    "Topic :: System :: Hardware :: Hardware Drivers",
+    "Framework :: FastAPI",
+]
+
+dependencies = [
+    # --- Web framework ---
+    "fastapi~=0.115.0",
+    "uvicorn[standard]~=0.32.0",
+    "python-multipart~=0.0.20",
+    "websockets~=13.1",
+    # --- Templating (Jinja2Templates para el dashboard HTML) ---
+    "jinja2~=3.1.4",
+    # --- ORM + DB ---
+    "sqlalchemy[asyncio]~=2.0.36",
+    "aiosqlite~=0.20.0",
+    "asyncpg~=0.30.0",
+    "alembic~=1.14.0",
+    "greenlet~=3.1.1",
+    # --- Validation + config ---
+    "pydantic~=2.10.0",
+    "pydantic-settings~=2.7.0",
+    "tomli~=2.0.1; python_version<'3.11'",
+    "loguru~=0.7.2",
+    # --- Auth / Security (NUEVO v4.3) ---
+    "python-jose[cryptography]~=3.3.0",
+    "bcrypt~=4.2.0",
+    "cryptography~=44.0.0",
+    # --- Windows-specific ---
+    "pywin32>=306; platform_system=='Windows'",
+    "wmi>=1.5.1; platform_system=='Windows'",
+    "pywin32-ctypes>=0.2.2; platform_system=='Windows'",
+    # --- MTP via pythonnet ---
+    "pythonnet>=3.0.3; platform_system=='Windows'",
+    # --- Filesystem watch ---
+    "watchdog~=6.0.0",
+    # --- Excel / PDF / Images ---
+    "openpyxl~=3.1.5",
+    "reportlab~=4.2.5",
+    "Pillow~=11.0.0",
+    # --- Webcam capture (solo Windows) ---
+    "opencv-python>=4.10.0; platform_system=='Windows'",
+    # --- Timezone data ---
+    "tzdata~=2024.2",
+    # --- Scheduling ---
+    "APScheduler~=3.11.0",
+    # --- HTTP client ---
+    "httpx~=0.28.0",
+    # --- Misc utils ---
+    "python-dateutil~=2.9.0",
+    "pyyaml~=6.0.2",
+    "click~=8.1.7",
+    "rich~=13.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest~=8.3.0",
+    "pytest-asyncio~=0.24.0",
+    "pytest-cov~=6.0.0",
+    "pytest-mock~=3.14.0",
+    "httpx~=0.28.0",
+    "respx~=0.21.0",
+    "ruff~=0.8.0",
+    "mypy~=1.13.0",
+    "bandit~=1.7.0",
+    "safety~=3.2.0",
+    "types-python-dateutil",
+    "types-pyyaml",
+]
+build = [
+    "pyinstaller>=6.4.0",
+    "wheel",
+    "setuptools>=68",
+]
+
+[project.scripts]
+lbamonitor-api = "lbamonitor.api.main:run_dev"
+lbamonitor-svc = "lbamonitor.monitor.__main__:main"
+lbamonitor-cli = "lbamonitor.cli.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["lbamonitor*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W",
+    "I",
+    "B",
+    "UP",
+    "C4",
+    "SIM",
+    "RUF",
+]
+ignore = [
+    "E501",
+    "B008",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/**" = ["B011"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = false
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+]
+filterwarnings = [
+    "error::DeprecationWarning",
+    "ignore::DeprecationWarning:watchdog.*",
+]
+
+[tool.coverage.run]
+source = ["lbamonitor"]
+omit = ["*/tests/*", "*/alembic/*"]

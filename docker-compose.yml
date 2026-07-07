@@ -1,0 +1,60 @@
+# ───────── LBAMonitor v4.3 — Docker Compose ─────────
+# Para desarrollo y producción small. Para producción grande, usar Kubernetes.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: lbamonitor
+      POSTGRES_USER: lbamonitor
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lbamonitor_dev}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lbamonitor"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      LBAMONITOR_ENV: production
+      LBAMONITOR_DATABASE__ENGINE: postgresql
+      LBAMONITOR_DATABASE__HOST: db
+      LBAMONITOR_DATABASE__PORT: 5432
+      LBAMONITOR_DATABASE__USER: lbamonitor
+      LBAMONITOR_DATABASE__PASSWORD: ${POSTGRES_PASSWORD:-lbamonitor_dev}
+      LBAMONITOR_DATABASE__PATH: lbamonitor
+      LBAMONITOR_SECURITY__JWT_SECRET: ${LBAMONITOR_JWT_SECRET}
+      LBAMONITOR_LICENSE__SIGNING_SECRET: ${LBAMONITOR_LICENSE_SECRET}
+      LBAMONITOR_PLUGINS_SIGNING_KEY: ${LBAMONITOR_PLUGINS_KEY}
+    ports:
+      - "8123:8123"
+    volumes:
+      - ./backups:/backups
+      - ./logs:/logs
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.web
+    depends_on:
+      - backend
+    environment:
+      LBAMONITOR_BACKEND_URL: http://backend:8123
+      LBAMONITOR_WEB_SECRET_KEY: ${LBAMONITOR_WEB_SECRET}
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+
+volumes:
+  pgdata:

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LBAMonitor — {{ title }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0F0F12; color: #E4E4E7; }
+        .nav { background: #1A1A1F; padding: 16px 24px; display: flex; align-items: center; gap: 24px; border-bottom: 1px solid #2E2E38; }
+        .nav a { color: #A1A1AA; text-decoration: none; font-size: 14px; }
+        .nav a:hover { color: #0078D4; }
+        .nav a.active { color: #0078D4; font-weight: bold; }
+        .logo { width: 32px; height: 32px; background: #0078D4; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 18px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+        .card { background: #1A1A1F; border: 1px solid #2E2E38; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .kpi { background: #1A1A1F; border: 1px solid #2E2E38; border-radius: 8px; padding: 20px; }
+        .kpi-label { font-size: 11px; color: #A1A1AA; text-transform: uppercase; margin-bottom: 8px; }
+        .kpi-value { font-size: 28px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; background: #22222A; color: #A1A1AA; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #2E2E38; }
+        td { padding: 12px; border-bottom: 1px solid #2E2E38; }
+        tr:hover { background: #22222A; }
+        input, select { background: #22222A; color: #E4E4E7; border: 1px solid #2E2E38; border-radius: 6px; padding: 8px 12px; font-size: 14px; }
+        button, .btn { background: #0078D4; color: white; border: none; border-radius: 6px; padding: 8px 20px; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
+        button:hover, .btn:hover { background: #106EBE; }
+        .search-bar { display: flex; gap: 12px; margin-bottom: 24px; }
+        .search-bar input { flex: 1; }
+        .badge { padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+        .badge-blue { background: rgba(0,120,212,0.15); color: #0078D4; }
+        .badge-green { background: rgba(34,197,94,0.15); color: #22C55E; }
+        .badge-yellow { background: rgba(245,158,11,0.15); color: #F59E0B; }
+        .badge-red { background: rgba(239,68,68,0.15); color: #EF4444; }
+        .footer { text-align: center; padding: 24px; color: #71717A; font-size: 12px; border-top: 1px solid #2E2E38; margin-top: 40px; }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="logo">L</div>
+        <a href="{{ url_for('catalog') }}" class="{{ 'active' if active == 'catalog' else '' }}">Catálogo</a>
+        {% if session.get('token') %}
+        <a href="{{ url_for('stats') }}" class="{{ 'active' if active == 'stats' else '' }}">Estadísticas</a>
+        <a href="{{ url_for('closures') }}" class="{{ 'active' if active == 'closures' else '' }}">Cierres</a>
+        <a href="{{ url_for('logout') }}" style="margin-left: auto; color: #EF4444;">Salir</a>
+        {% else %}
+        <a href="{{ url_for('login') }}" style="margin-left: auto;">Login Admin</a>
+        {% endif %}
+    </nav>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+    <footer class="footer">LBAMonitor v4.0.0 — Monitoreo de copias USB</footer>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

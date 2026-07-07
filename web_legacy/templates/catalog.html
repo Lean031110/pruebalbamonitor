@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% set active = 'catalog' %}
+{% set title = 'Catálogo' %}
+{% block content %}
+<h1 style="font-size: 24px; margin-bottom: 24px;">Catálogo</h1>
+
+<div class="search-bar">
+    <input type="text" id="search" placeholder="Buscar..." value="{{ q }}"
+           oninput="debounceSearch()">
+    <select id="category" onchange="updateSearch()">
+        <option value="">Todas</option>
+        <option value="movie" {{ 'selected' if category == 'movie' }}>Películas</option>
+        <option value="series" {{ 'selected' if category == 'series' }}>Series</option>
+        <option value="music" {{ 'selected' if category == 'music' }}>Música</option>
+        <option value="document" {{ 'selected' if category == 'document' }}>Documentos</option>
+        <option value="game" {{ 'selected' if category == 'game' }}>Juegos</option>
+        <option value="app" {{ 'selected' if category == 'app' }}>Apps</option>
+    </select>
+</div>
+
+<div id="results">
+    {% if items %}
+    <table>
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Categoría</th>
+                <th>Año</th>
+                <th>Género</th>
+                <th>Director/Artista</th>
+                <th>Rating</th>
+                <th>Tamaño</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.title }}</td>
+                <td><span class="badge badge-blue">{{ item.category }}</span></td>
+                <td>{{ item.year or '—' }}</td>
+                <td>{{ item.genre or '—' }}</td>
+                <td>{{ item.director or item.artist or '—' }}</td>
+                <td>{{ item.rating or '—' }}</td>
+                <td>{{ '%.1f GB' % item.size_gb if item.size_gb else '—' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 40px;">
+        <p style="color: #A1A1AA;">No se encontraron resultados.</p>
+    </div>
+    {% endif %}
+</div>
+
+<p style="margin-top: 16px; color: #71717A;">{{ total }} resultado(s)</p>
+
+<script>
+let timer;
+function debounceSearch() {
+    clearTimeout(timer);
+    timer = setTimeout(updateSearch, 300);
+}
+function updateSearch() {
+    const q = document.getElementById('search').value;
+    const cat = document.getElementById('category').value;
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (cat) params.set('category', cat);
+    window.location.href = '/?' + params.toString();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Fondo circular con gradiente -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0078D4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#005A9E;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="usb" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E0E0E0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Círculo de fondo -->
+  <circle cx="128" cy="128" r="120" fill="url(#bg)" />
+
+  <!-- USB stick estilizado -->
+  <!-- Cuerpo de la USB -->
+  <rect x="88" y="100" width="60" height="100" rx="8" fill="url(#usb)" />
+  <!-- Conector USB -->
+  <rect x="100" y="60" width="36" height="45" rx="2" fill="#C0C0C0" />
+  <!-- Línea del conector -->
+  <rect x="106" y="50" width="24" height="12" rx="1" fill="#A0A0A0" />
+  <!-- Detalles del conector -->
+  <rect x="104" y="70" width="6" height="20" fill="#888" />
+  <rect x="114" y="70" width="6" height="20" fill="#888" />
+  <rect x="124" y="70" width="6" height="20" fill="#888" />
+
+  <!-- Letra L en el cuerpo -->
+  <text x="118" y="160" font-family="Arial, sans-serif" font-size="48" font-weight="bold"
+        fill="#0078D4" text-anchor="middle">L</text>
+
+  <!-- Ondas de señal (monitoreo) -->
+  <path d="M 168 120 Q 178 110, 188 120 T 208 120" stroke="#FFFFFF" stroke-width="3" fill="none" opacity="0.7" />
+  <path d="M 168 140 Q 178 130, 188 140 T 208 140" stroke="#FFFFFF" stroke-width="3" fill="none" opacity="0.5" />
+  <path d="M 168 160 Q 178 150, 188 160 T 208 160" stroke="#FFFFFF" stroke-width="3" fill="none" opacity="0.3" />
+
+  <!-- Borde exterior -->
+  <circle cx="128" cy="128" r="118" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.3" />
+</svg>
