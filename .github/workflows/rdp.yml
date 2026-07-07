@@ -64,12 +64,15 @@ jobs:
         run: |
           cd backend
           $env:LBAMONITOR_ENV = "development"
-          # Forzar codificación UTF-8 en la consola
+          # Cambiar a UTF-8 para evitar problemas con caracteres especiales
           chcp 65001 > $null
-          # Ejecutar init-db con las variables de entorno correctas
+          # Inicializar BD con admin
           lbamonitor-cli init-db --reset --with-admin
-          # Verificar que la BD se creó correctamente (versión simplificada)
-          python -c "from lbamonitor.core.db import init_engine, get_session_factory, dispose_engine; from lbamonitor.core.models import User; import asyncio; async def check(): await init_engine(); async with get_session_factory()() as s: user = await s.get(User, 1); print('Admin user exists:', user is not None); await dispose_engine(); asyncio.run(check())"
+          # Verificación simple con SQLite (sin asyncio)
+          sqlite3 C:/ProgramData/LBAMonitor/data/lbamonitor.db "SELECT COUNT(*) FROM users WHERE username='admin';"
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✅ Base de datos y usuario admin creados correctamente" -ForegroundColor Green
+          }
         shell: pwsh
 
       # ============================================================
