@@ -1,0 +1,74 @@
+name: Windows RDP (LBAMonitor Test)
+
+on:
+  workflow_dispatch:  # Solo se ejecuta manualmente
+
+jobs:
+  rdp:
+    runs-on: windows-latest  # O windows-2022 para más estabilidad
+    timeout-minutes: 360     # 6 horas máximo
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Instalar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias del backend
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Instalar dependencias del desktop (PySide6)
+        run: |
+          cd desktop_qt
+          pip install -r requirements.txt
+
+      - name: Inicializar base de datos
+        run: |
+          cd backend
+          LBAMONITOR_ENV=development lbamonitor-cli init-db --reset --with-admin
+
+      - name: Habilitar RDP y crear usuario
+        run: |
+          # Habilitar RDP
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name 'fDenyTSConnections' -Value 0
+          # Abrir puerto en firewall
+          netsh advfirewall firewall set rule group="remote desktop" new enable=Yes
+          # Crear usuario para RDP
+          net user lbatest Password123! /add
+          net localgroup Administrators lbatest /add
+          net localgroup "Remote Desktop Users" lbatest /add
+
+      - name: Obtener IP pública y generar URL
+        id: ip
+        run: |
+          $ip = (Invoke-RestMethod -Uri "https://api.ipify.org").Trim()
+          echo "ip=$ip" >> $env:GITHUB_OUTPUT
+          echo "url=rdp://$ip:3389" >> $env:GITHUB_OUTPUT
+
+      - name: Mostrar credenciales
+        run: |
+          Write-Host "==================================================" -ForegroundColor Green
+          Write-Host "  CONEXIÓN RDP HABILITADA" -ForegroundColor Green
+          Write-Host "==================================================" -ForegroundColor Green
+          Write-Host "Dirección IP: ${{ steps.ip.outputs.ip }}"
+          Write-Host "Puerto: 3389"
+          Write-Host "Usuario: lbatest"
+          Write-Host "Contraseña: Password123!"
+          Write-Host ""
+          Write-Host "IMPORTANTE: La VM se destruirá cuando este workflow termine."
+          Write-Host "Usa el Cliente de Escritorio Remoto (mstsc.exe) para conectarte."
+          Write-Host "==================================================" -ForegroundColor Yellow
+
+      - name: Mantener la VM viva (6 horas)
+        run: |
+          Write-Host "La VM estará activa por 6 horas. Presiona Ctrl+C para detenerla."
+          while ($true) {
+            Write-Host "VM activa... $(Get-Date)" -ForegroundColor Cyan
+            Start-Sleep -Seconds 600
+          }
